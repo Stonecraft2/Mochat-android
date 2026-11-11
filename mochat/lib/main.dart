@@ -1,16 +1,20 @@
+
 import 'package:flutter/material.dart';
+import 'supabase_config.dart';
 
-void main() {
-  runApp(const MoChatApp());
-}
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+    await initializeSupabase();
+      runApp(const MoChatApp());
+      }
 
-const Color moBlue = Color(0xFF78C9E8);
-const Color moBlueDark = Color(0xFF319BC8);
-const Color moBrown = Color(0xFFD8C3A5);
-const Color moBackground = Color(0xFFF1F2F3);
-const Color moGreen = Color(0xFF36A852);
-const Color moRed = Color(0xFFD94B4B);
-
+      const Color moBlue = Color(0xFF78C9E8);
+      const Color moBlueDark = Color(0xFF319BC8);
+      const Color moBrown = Color(0xFFD8C3A5);
+      const Color moBackground = Color(0xFFF1F2F3);
+      const Color moGreen = Color(0xFF36A852);
+      const Color moRed = Color(0xFFF5094B);
+      
 class MoChatApp extends StatelessWidget {
   const MoChatApp({super.key});
 
