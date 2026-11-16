@@ -150,14 +150,18 @@ class LoginPage extends StatefulWidget {
                               super.dispose();
                                 }
 
-                                  void openRooms(String nick) {
+                                  void openRooms(String nick, String? role) {
                                       Navigator.pushReplacement(
-                                            context,
-                                                  MaterialPageRoute(
-                                                          builder: (_) => RoomsPage(nick: nick),
-                                                                ),
-                                                                    );
-                                                                      }
+                                          context,
+                                              MaterialPageRoute(
+                                                    builder: (_) => RoomsPage(
+                                                            nick: nick,
+                                                                    role: role,
+                                                                          ),
+                                                                              ),
+                                                                                );
+                                                                                }
+                                  }
 
                                                                         Future<void> enter() async {
                                                                             if (loading) return;
@@ -174,9 +178,14 @@ class LoginPage extends StatefulWidget {
 
                                                                                                                 try {
                                                                                                                       await AuthService.login(nick, password);
+                                                                                                                      final role = await AuthService.getUserRole();
+
+                                                                                                                      if (role == 'owner') {
+                                                                                                                        print('Главный администратор вошёл');
+                                                                                                                        }
 
                                                                                                                             if (!mounted) return;
-                                                                                                                                  openRooms(nick);
+                                                                                                                                  openRooms(nick, role);
                                                                                                                                       } catch (e) {
                                                                                                                                             if (!mounted) return;
                                                                                                                                                   showMessage(
@@ -204,10 +213,11 @@ class LoginPage extends StatefulWidget {
                                                                                                                                                                                                                                   try {
                                                                                                                                                                                                                                         await AuthService.register(nick, password);
                                                                                                                                                                                                                                               await AuthService.login(nick, password);
+                                                                                                                                                                                                                                              final role = await AuthService.getUserRole();
 
                                                                                                                                                                                                                                                     if (!mounted) return;
                                                                                                                                                                                                                                                           showMessage(context, 'Регистрация успешна!');
-                                                                                                                                                                                                                                                                openRooms(nick);
+                                                                                                                                                                                                                                                                openRooms(nick, role);
                                                                                                                                                                                                                                                                     } catch (e) {
                                                                                                                                                                                                                                                                           if (!mounted) return;
                                                                                                                                                                                                                                                                                 showMessage(
@@ -377,9 +387,14 @@ class RoomInfo {
                                               }
 
                                               class RoomsPage extends StatefulWidget {
-                                                final String nick;
+                                                  final String nick;
+                                                    final String? role;
 
-                                                  const RoomsPage({super.key, required this.nick});
+                                                      const RoomsPage({
+                                                          super.key,
+                                                              required this.nick,
+                                                                  this.role,
+                                                                    });
 
                                                     @override
                                                       State<RoomsPage> createState() => _RoomsPageState();
