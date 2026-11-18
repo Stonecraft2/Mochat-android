@@ -430,6 +430,32 @@ class RoomInfo {
                                                                                                                                                             child: Column(
                                                                                                                                                                         children: [
                                                                                                                                                                                       const BlueHeader(title: 'MoChat'),
+if (widget.role == 'owner')
+  Container(
+    width: double.infinity,
+    margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+    padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 12),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.94),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: moBlueDark, width: 1),
+    ),
+    child: const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.verified_user, color: moBlueDark, size: 18),
+        SizedBox(width: 7),
+        Text(
+          'ГЛАВНЫЙ АДМИНИСТРАТОР',
+          style: TextStyle(
+            color: moBlueDark,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    ),
+  ),
                                                                                                                                                                                                     Expanded(
                                                                                                                                                                                                                     child: FutureBuilder<List<RoomInfo>>(
                                                                                                                                                                                                                                       future: roomsFuture,
