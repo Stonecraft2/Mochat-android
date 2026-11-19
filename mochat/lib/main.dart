@@ -1,8 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'supabase_config.dart';
 import 'auth_service.dart';
+
+const secureStorage = FlutterSecureStorage();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -139,9 +142,29 @@ class LoginPage extends StatefulWidget {
       class _LoginPageState extends State<LoginPage> {
         final nickController = TextEditingController();
           final passwordController = TextEditingController();
+           bool remember = true;
+bool loading = false;
 
-            bool remember = true;
-              bool loading = false;
+@override
+void initState() {
+  super.initState();
+  loadSavedCredentials();
+}
+
+Future<void> loadSavedCredentials() async {
+  final savedNick = await secureStorage.read(key: 'saved_nick');
+  final savedPassword = await secureStorage.read(key: 'saved_password');
+
+  if (!mounted) return;
+
+  if (savedNick != null && savedPassword != null) {
+    setState(() {
+      nickController.text = savedNick;
+      passwordController.text = savedPassword;
+      remember = true;
+    });
+  }
+}
 
                 @override
                   void dispose() {
@@ -178,6 +201,20 @@ class LoginPage extends StatefulWidget {
 
                                                                                                                 try {
                                                                                                                       await AuthService.login(nick, password);
+                                                                                                                      if (remember) {
+  await secureStorage.write(
+    key: 'saved_nick',
+    value: nick,
+  );
+
+  await secureStorage.write(
+    key: 'saved_password',
+    value: password,
+  );
+} else {
+  await secureStorage.delete(key: 'saved_nick');
+  await secureStorage.delete(key: 'saved_password');
+                                                                                                                      }
                                                                                                                       final role = await AuthService.getUserRole();
 
                                                                                                                       if (role == 'owner') {
