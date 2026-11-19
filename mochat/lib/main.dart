@@ -591,11 +591,14 @@ class ChatMessage {
 class ChatPage extends StatefulWidget {
   final String nick;
   final String room;
-  const ChatPage({super.key, required this.nick, required this.room});
+  final String roomId;
 
-  @override
-  State<ChatPage> createState() => _ChatPageState();
-}
+  const ChatPage({
+    super.key,
+    required this.nick,
+    required this.room,
+    required this.roomId,
+  });
 
 class _ChatPageState extends State<ChatPage> {
   final controller = TextEditingController();
