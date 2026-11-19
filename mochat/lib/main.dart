@@ -606,6 +606,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final supabase = Supabase.instance.client;
+  dynamic messagesChannel;
   final controller = TextEditingController();
   final scrollController = ScrollController();
 
@@ -613,10 +614,11 @@ class _ChatPageState extends State<ChatPage> {
   bool isLoading = true;
 
   @override
-  void initState() {
-    super.initState();
-    loadMessages();
-  }
+void initState() {
+  super.initState();
+  loadMessages();
+  subscribeToMessages();
+}
 
   Future<void> loadMessages() async {
     try {
@@ -679,13 +681,37 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
   }
+      void subscribeToMessages() {
+  messagesChannel = supabase
+      .channel('room_${widget.roomId}')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.insert,
+        schema: 'public',
+        table: 'messages',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'room_id',
+          value: widget.roomId,
+        ),
+        callback: (payload) {
+          loadMessages();
+        },
+      )
+      .subscribe();
+  }
 
   @override
-  void dispose() {
-    controller.dispose();
-    scrollController.dispose();
-    super.dispose();
+void dispose() {
+  if (messagesChannel != null) {
+    supabase.removeChannel(messagesChannel);
   }
+
+  controller.dispose();
+  scrollController.dispose();
+  super.dispose();
+}
+
+  
 
   Future<void> send() async {
     final value = controller.text.trim();
