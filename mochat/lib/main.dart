@@ -624,7 +624,7 @@ class _ChatPageState extends State<ChatPage> {
           .from('messages')
           .select('sender_id, content')
           .eq('room_id', widget.roomId)
-          .order('created_at');
+          .order('created_at', ascending: true);
 
       final senderIds = data
           .map((row) => row['sender_id'] as String)
