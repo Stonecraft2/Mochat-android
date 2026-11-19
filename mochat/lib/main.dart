@@ -599,6 +599,7 @@ class ChatPage extends StatefulWidget {
     required this.room,
     required this.roomId,
   });
+}
 
 class _ChatPageState extends State<ChatPage> {
   final controller = TextEditingController();
