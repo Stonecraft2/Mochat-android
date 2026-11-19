@@ -605,14 +605,80 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final supabase = Supabase.instance.client;
   final controller = TextEditingController();
   final scrollController = ScrollController();
-  final messages = <ChatMessage>[
-    const ChatMessage('Система', 'Добро пожаловать в комнату!', moBlueDark),
-    const ChatMessage('Алина', 'Всем добрый вечер 😊', Colors.deepPurple),
-    const ChatMessage('Рамзан', 'Привет всем!', moGreen),
-    const ChatMessage('Марат', 'Как настроение?', Colors.deepOrange),
-  ];
+
+  final messages = <ChatMessage>[];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadMessages();
+  }
+
+  Future<void> loadMessages() async {
+    try {
+      final data = await supabase
+          .from('messages')
+          .select('sender_id, content')
+          .eq('room_id', widget.roomId)
+          .order('created_at');
+
+      final senderIds = data
+          .map((row) => row['sender_id'] as String)
+          .toSet()
+          .toList();
+
+      final names = <String, String>{};
+
+      if (senderIds.isNotEmpty) {
+        final profiles = await supabase
+            .from('profiles')
+            .select('id, username')
+            .inFilter('id', senderIds);
+
+        for (final profile in profiles) {
+          names[profile['id'] as String] =
+              profile['username'] as String? ?? 'Пользователь';
+        }
+      }
+
+      final loadedMessages = <ChatMessage>[];
+
+      for (final row in data) {
+        final senderId = row['sender_id'] as String;
+
+        loadedMessages.add(
+          ChatMessage(
+            names[senderId] ?? 'Пользователь',
+            row['content'] as String,
+            moBlueDark,
+          ),
+        );
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        messages
+          ..clear()
+          ..addAll(loadedMessages);
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки сообщений: $e')),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -621,22 +687,40 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  void send() {
+  Future<void> send() async {
     final value = controller.text.trim();
     if (value.isEmpty) return;
-    setState(() {
-      messages.add(ChatMessage(widget.nick, value, moBlueDark));
-      controller.clear();
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    controller.clear();
+
+    try {
+      await supabase.from('messages').insert({
+        'room_id': widget.roomId,
+        'sender_id': user.id,
+        'content': value,
+      });
+
+      await loadMessages();
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (scrollController.hasClients) {
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка отправки сообщения: $e')),
+      );
+    }
   }
 
   @override
@@ -664,38 +748,44 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
               Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(12),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final item = messages[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '${item.nick}: ',
-                              style: TextStyle(
-                                color: item.color,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            TextSpan(
-                              text: item.message,
-                              style: const TextStyle(
-                                color: Colors.black87,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
+                child: isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: moBlueDark,
                         ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(12),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final item = messages[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${item.nick}: ',
+                                    style: TextStyle(
+                                      color: item.color,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: item.message,
+                                    style: const TextStyle(
+                                      color: Colors.black87,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
               Container(
                 color: Colors.white.withValues(alpha: 0.94),
