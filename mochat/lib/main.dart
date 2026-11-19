@@ -599,6 +599,9 @@ class ChatPage extends StatefulWidget {
     required this.room,
     required this.roomId,
   });
+
+  @override
+  State<ChatPage> createState() => _ChatPageState();
 }
 
 class _ChatPageState extends State<ChatPage> {
