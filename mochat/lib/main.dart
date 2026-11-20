@@ -792,25 +792,12 @@ void initState() {
           value: widget.roomId,
         ),
         callback: (payload) {
-  if (!mounted) return;
-
-  debugPrint('REALTIME MESSAGE: ${payload.newRecord}');
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Получено новое сообщение через Realtime'),
-      duration: Duration(seconds: 2),
-    ),
-  );
-
-  loadMessages();
-},
-      .subscribe((status, error) {
-        debugPrint('REALTIME STATUS: $status');
-        if (error != null) {
-          debugPrint('REALTIME ERROR: $error');
-        }
-      });
+          if (!mounted) return;
+          debugPrint('REALTIME MESSAGE: ${payload.newRecord}');
+          loadMessages();
+        },
+      )
+      .subscribe();
       }
 
   @override
