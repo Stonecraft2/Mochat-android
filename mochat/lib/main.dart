@@ -767,6 +767,11 @@ void initState() {
           ..addAll(loadedMessages);
         isLoading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text('Сообщений загружено: ${messages.length}'),
+  ),
+);
     } catch (e) {
       if (!mounted) return;
 
