@@ -565,6 +565,24 @@ if (widget.role == 'owner')
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         child: InkWell(
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     borderRadius: BorderRadius.circular(5),
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 onTap: () async {
+   final userId = supabase.auth.currentUser?.id;
+
+  if (userId == null) return;
+
+  final membership = await supabase
+      .from('room_members')
+      .select('room_id')
+      .eq('room_id', room.id)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+  if (membership == null) {
+    await supabase.from('room_members').insert({
+      'room_id': room.id,
+      'user_id': userId,
+      'role': 'member',
+    });
+  }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
   await secureStorage.write(
     key: 'last_room_id_${widget.nick}',
     value: room.id,
