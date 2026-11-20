@@ -898,10 +898,6 @@ void dispose() {
                 child: Row(
                   children: [
                     IconButton(
-  onPressed: () => showChatMenu(context, widget.nick),
-  icon: const Icon(Icons.menu, color: moBlueDark),
-),
-                    IconButton(
                       onPressed: () => showEmojiPicker(context, (emoji) {
                         controller.text += emoji;
                         controller.selection = TextSelection.collapsed(
@@ -965,22 +961,30 @@ void dispose() {
 
 void showEmojiPicker(BuildContext context, ValueChanged<String> onSelect) {
   const emojis = ['😀', '😂', '😍', '😘', '😉', '😊', '😎', '😭', '❤️', '👍'];
+
   showModalBottomSheet(
     context: context,
-    builder: (_) => Padding(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: emojis
-            .map((emoji) => InkWell(
-                  onTap: () {
-                    onSelect(emoji);
-                    Navigator.pop(context);
-                  },
-                  child: Text(emoji, style: const TextStyle(fontSize: 30)),
-                ))
-            .toList(),
+    useSafeArea: true,
+    builder: (_) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: emojis
+              .map((emoji) => InkWell(
+                    onTap: () {
+                      onSelect(emoji);
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(fontSize: 30),
+                    ),
+                  ))
+              .toList(),
+        ),
       ),
     ),
   );
