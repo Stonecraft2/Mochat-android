@@ -793,7 +793,14 @@ void initState() {
         ),
         callback: (payload) {
           if (!mounted) return;
-          debugPrint('REALTIME MESSAGE: ${payload.newRecord}');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Realtime получил новое сообщение!'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+
           loadMessages();
         },
       )
