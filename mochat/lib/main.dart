@@ -792,11 +792,17 @@ void initState() {
           value: widget.roomId,
         ),
         callback: (payload) {
+          debugPrint('REALTIME MESSAGE: ${payload.newRecord}');
           loadMessages();
         },
       )
-      .subscribe();
-  }
+      .subscribe((status, error) {
+        debugPrint('REALTIME STATUS: $status');
+        if (error != null) {
+          debugPrint('REALTIME ERROR: $error');
+        }
+      });
+      }
 
   @override
 void dispose() {
