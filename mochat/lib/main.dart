@@ -837,9 +837,8 @@ void dispose() {
           child: Column(
             children: [
               BlueHeader(
-                title: widget.room,
-                onBack: () => Navigator.pop(context),
-              ),
+  title: widget.room,
+),
               Container(
                 width: double.infinity,
                 color: const Color(0xFFE3F4FA),
@@ -899,6 +898,10 @@ void dispose() {
                 child: Row(
                   children: [
                     IconButton(
+  onPressed: () => showChatMenu(context, widget.nick),
+  icon: const Icon(Icons.menu, color: moBlueDark),
+),
+                    IconButton(
                       onPressed: () => showEmojiPicker(context, (emoji) {
                         controller.text += emoji;
                         controller.selection = TextSelection.collapsed(
@@ -944,7 +947,7 @@ void dispose() {
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton.icon(
-                      onPressed: () => showChatMenu(context),
+                      onPressed: () => showChatMenu(context, widget.nick),
                       icon: const Icon(Icons.menu, color: Colors.white),
                       label: const Text('Меню',
                           style: TextStyle(color: Colors.white)),
@@ -983,36 +986,67 @@ void showEmojiPicker(BuildContext context, ValueChanged<String> onSelect) {
   );
 }
 
-void showChatMenu(BuildContext context) {
+void showChatMenu(BuildContext context, String nick) {
   showModalBottomSheet(
     context: context,
-    builder: (context) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ListTile(
-          leading: const Icon(Icons.meeting_room),
-          title: const Text('Сменить комнату'),
-          onTap: () => Navigator.pop(context),
+    useSafeArea: true,
+    builder: (sheetContext) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.meeting_room),
+              title: const Text('Сменить комнату'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+
+                final role = await AuthService.getUserRole();
+
+                if (!context.mounted) return;
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RoomsPage(
+                      nick: nick,
+                      role: role,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.store),
+              title: const Text('Чат-портал'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PortalPage(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Моя анкета'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProfilePage(),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
-        ListTile(
-          leading: const Icon(Icons.store),
-          title: const Text('Чат-портал'),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const PortalPage()));
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.person),
-          title: const Text('Моя анкета'),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()));
-          },
-        ),
-      ],
+      ),
     ),
   );
 }
