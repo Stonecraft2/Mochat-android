@@ -708,9 +708,12 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final supabase = Supabase.instance.client;
-  dynamic messagesSubscription;
-  final controller = TextEditingController();
-  final scrollController = ScrollController();
+
+dynamic messagesSubscription;
+dynamic presenceChannel;
+
+final controller = TextEditingController();
+final scrollController = ScrollController();
 
   final messages = <ChatMessage>[];
   bool isLoading = true;
@@ -730,6 +733,7 @@ void initState() {
 
   loadMessages();
   subscribeToMessages();
+  joinRoomPresence();
 }
 
   
@@ -819,11 +823,37 @@ Future<void> loadMessages() async {
         loadMessages();
       });
       }
+  void joinRoomPresence() {
+  presenceChannel = supabase.channel(
+    'room_presence_${widget.roomId}',
+  );
 
-  @override
+  presenceChannel
+      .onPresenceSync((payload) {
+        if (!mounted) return;
+
+        setState(() {});
+      })
+      .subscribe((status, error) {
+        if (status == 'SUBSCRIBED') {
+          presenceChannel.track({
+            'user_id': supabase.auth.currentUser!.id,
+            'nick': widget.nick,
+            'room_id': widget.roomId,
+          });
+        }
+      });
+  }
+
+    @override
 void dispose() {
   if (messagesSubscription != null) {
-  messagesSubscription.cancel();
+    messagesSubscription.cancel();
+  }
+
+  if (presenceChannel != null) {
+    presenceChannel.untrack();
+    supabase.removeChannel(presenceChannel);
   }
 
   controller.dispose();
