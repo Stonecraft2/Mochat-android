@@ -704,7 +704,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final supabase = Supabase.instance.client;
-  dynamic messagesChannel;
+  dynamic messagesSubscription;
   final controller = TextEditingController();
   final scrollController = ScrollController();
 
@@ -779,11 +779,7 @@ void initState() {
           ..addAll(loadedMessages);
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(
-    content: Text('Сообщений загружено: ${messages.length}'),
-  ),
-);
+
     } catch (e) {
       if (!mounted) return;
 
@@ -797,37 +793,20 @@ void initState() {
     }
   }
       void subscribeToMessages() {
-  messagesChannel = supabase
-      .channel('room_${widget.roomId}')
-      .onPostgresChanges(
-        event: PostgresChangeEvent.insert,
-        schema: 'public',
-        table: 'messages',
-        filter: PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: 'room_id',
-          value: widget.roomId,
-        ),
-        callback: (payload) {
-          if (!mounted) return;
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Realtime получил новое сообщение!'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-
-          loadMessages();
-        },
-      )
-      .subscribe();
+  messagesSubscription = supabase
+      .from('messages')
+      .stream(primaryKey: ['id'])
+      .eq('room_id', widget.roomId)
+      .listen((data) {
+        if (!mounted) return;
+        loadMessages();
+      });
       }
 
   @override
 void dispose() {
-  if (messagesChannel != null) {
-    supabase.removeChannel(messagesChannel);
+  if (messagesSubscription != null) {
+  messagesSubscription.cancel();
   }
 
   controller.dispose();
