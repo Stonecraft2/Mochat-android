@@ -715,16 +715,6 @@ class _ChatPageState extends State<ChatPage> {
 void initState() {
   super.initState();
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Подписка на комнату: ${widget.roomId}'),
-        duration: const Duration(seconds: 10),
-      ),
-    );
-  });
 
   loadMessages();
   subscribeToMessages();
