@@ -496,7 +496,7 @@ class RoomInfo {
                                                                                                                                                   child: SafeArea(
                                                                                                                                                             child: Column(
                                                                                                                                                                         children: [
-                                                                                                                                                                                      BlueHeader(title: 'Добро пожаловать в ${widget.room}!'),
+                                                                                                                                                                                      const BlueHeader(title: 'MoChat'),
 if (widget.role == 'owner')
   Container(
     width: double.infinity,
@@ -710,10 +710,18 @@ class _ChatPageState extends State<ChatPage> {
 
   final messages = <ChatMessage>[];
   bool isLoading = true;
+  bool showWelcome = true;
 
   @override
 void initState() {
   super.initState();
+  Future.delayed(const Duration(seconds: 30), () {
+  if (!mounted) return;
+
+  setState(() {
+    showWelcome = false;
+  });
+});
 
 
   loadMessages();
@@ -852,19 +860,20 @@ void dispose() {
               BlueHeader(
   title: widget.room,
 ),
+              if (showWelcome)
               Container(
-                width: double.infinity,
-                color: const Color(0xFFE3F4FA),
-                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                child: const Text(
-                  'Добро пожаловать в MoChat!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: moBlueDark,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+  width: double.infinity,
+  color: const Color(0xFFE3F4FA),
+  padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+  child: Text(
+    'Добро пожаловать в ${widget.room}!',
+    textAlign: TextAlign.center,
+    style: const TextStyle(
+      color: moBlueDark,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+),
               Expanded(
                 child: isLoading
                     ? const Center(
