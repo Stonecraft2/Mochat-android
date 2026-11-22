@@ -201,7 +201,9 @@ Future<void> loadSavedCredentials() async {
 
                                                                                                                 try {
                                                                                                                       await AuthService.login(nick, password);
+                                                                                                                      await applyPendingNicknameColor();
                                                                                                                       if (remember) {
+                                                                                                                        
   await secureStorage.write(
     key: 'saved_nick',
     value: nick,
@@ -279,8 +281,13 @@ openRooms(nick, role);
 
                                                                                                                                                                                                                                   try {
                                                                                                                                                                                                                                         await AuthService.register(nick, password);
-                                                                                                                                                                                                                                              await AuthService.login(nick, password);
-                                                                                                                                                                                                                                              final role = await AuthService.getUserRole();
+await AuthService.login(nick, password);
+
+await applyPendingNicknameColor();
+
+final role = await AuthService.getUserRole();
+                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                            
 
                                                                                                                                                                                                                                                     if (!mounted) return;
                                                                                                                                                                                                                                                           showMessage(context, 'Регистрация успешна!');
@@ -725,68 +732,83 @@ void initState() {
   subscribeToMessages();
 }
 
-  Future<void> loadMessages() async {
-    try {
-      final data = await supabase
-          .from('messages')
-          .select('sender_id, content')
-          .eq('room_id', widget.roomId)
-          .order('created_at', ascending: true);
+  
+Future<void> loadMessages() async {
+  try {
+    final data = await supabase
+        .from('messages')
+        .select('sender_id, content')
+        .eq('room_id', widget.roomId)
+        .order('created_at', ascending: true);
 
-      final senderIds = data
-          .map((row) => row['sender_id'] as String)
-          .toSet()
-          .toList();
+    final senderIds = data
+        .map((row) => row['sender_id'] as String)
+        .toSet()
+        .toList();
 
-      final names = <String, String>{};
+    final names = <String, String>{};
+    final colors = <String, Color>{};
 
-      if (senderIds.isNotEmpty) {
-        final profiles = await supabase
-            .from('profiles')
-            .select('id, username')
-            .inFilter('id', senderIds);
+    if (senderIds.isNotEmpty) {
+      final profiles = await supabase
+          .from('profiles')
+          .select('id, username, nickname_color')
+          .inFilter('id', senderIds);
 
-        for (final profile in profiles) {
-          names[profile['id'] as String] =
-              profile['username'] as String? ?? 'Пользователь';
+      for (final profile in profiles) {
+        final id = profile['id'] as String;
+
+        names[id] =
+            profile['username'] as String? ?? 'Пользователь';
+
+        final rawColor = profile['nickname_color'] as String?;
+
+        if (rawColor != null && rawColor.isNotEmpty) {
+          final colorValue = int.tryParse(rawColor, radix: 16);
+
+          if (colorValue != null) {
+            colors[id] = Color(colorValue);
+          }
         }
       }
+    }
 
-      final loadedMessages = <ChatMessage>[];
+    final loadedMessages = <ChatMessage>[];
 
-      for (final row in data) {
-        final senderId = row['sender_id'] as String;
+    for (final row in data) {
+      final senderId = row['sender_id'] as String;
 
-        loadedMessages.add(
-          ChatMessage(
-            names[senderId] ?? 'Пользователь',
-            row['content'] as String,
-            moBlueDark,
-          ),
-        );
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        messages
-          ..clear()
-          ..addAll(loadedMessages);
-        isLoading = false;
-      });
-
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка загрузки сообщений: $e')),
+      loadedMessages.add(
+        ChatMessage(
+          names[senderId] ?? 'Пользователь',
+          row['content'] as String,
+          colors[senderId] ?? moBlueDark,
+        ),
       );
     }
+
+    if (!mounted) return;
+
+    setState(() {
+      messages
+        ..clear()
+        ..addAll(loadedMessages);
+      isLoading = false;
+    });
+
+  } catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Ошибка загрузки сообщений: $e')),
+    );
   }
+}
+  
       void subscribeToMessages() {
   messagesSubscription = supabase
       .from('messages')
@@ -1433,3 +1455,27 @@ void showSettings(BuildContext context) {
     },
   );
 }
+
+Future<void> applyPendingNicknameColor() async {
+  final pendingColor = await secureStorage.read(
+    key: 'pending_nickname_color',
+  );
+
+  if (pendingColor == null) return;
+
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+
+  if (userId == null) return;
+
+  await Supabase.instance.client
+      .from('profiles')
+      .update({
+        'nickname_color': pendingColor,
+      })
+      .eq('id', userId);
+
+  await secureStorage.delete(
+    key: 'pending_nickname_color',
+  );
+}
+
