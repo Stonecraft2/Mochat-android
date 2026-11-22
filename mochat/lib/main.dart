@@ -496,7 +496,7 @@ class RoomInfo {
                                                                                                                                                   child: SafeArea(
                                                                                                                                                             child: Column(
                                                                                                                                                                         children: [
-                                                                                                                                                                                      const BlueHeader(title: 'MoChat'),
+                                                                                                                                                                                      BlueHeader(title: 'Добро пожаловать в ${widget.room}!'),
 if (widget.role == 'owner')
   Container(
     width: double.infinity,
