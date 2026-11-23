@@ -896,11 +896,6 @@ ScaffoldMessenger.of(context).showSnackBar(
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(
-    content: Text('Room ID: ${widget.roomId}'),
-  ),
-);
   } else {
     if (!mounted) return;
 
