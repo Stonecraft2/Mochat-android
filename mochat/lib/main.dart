@@ -863,16 +863,29 @@ Future<void> loadMessages() async {
         roomUsersNotifier.value = usersById.values.toList();
       })
       .subscribe((status, error) async {
-        if (status == RealtimeSubscribeStatus.subscribed) {
-          await presenceChannel.track({
-            'user_id':
-                supabase.auth.currentUser!.id,
-            'nick': widget.nick,
-            'room_id': widget.roomId,
-          });
-        }
-      });
+  if (status == RealtimeSubscribeStatus.subscribed) {
+    final result = await presenceChannel.track({
+      'user_id': supabase.auth.currentUser!.id,
+      'nick': widget.nick,
+      'room_id': widget.roomId,
+    });
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Presence: $result')),
+    );
+  } else {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Ошибка Presence: $status — $error'),
+      ),
+    );
   }
+});
+  }    
 
     @override
 void dispose() {
