@@ -716,6 +716,7 @@ final controller = TextEditingController();
 final scrollController = ScrollController();
 
   final messages = <ChatMessage>[];
+  final List<Map<String, dynamic>> roomUsers = [];
   bool isLoading = true;
   bool showWelcome = true;
 
@@ -832,12 +833,43 @@ Future<void> loadMessages() async {
       .onPresenceSync((payload) {
         if (!mounted) return;
 
-        setState(() {});
+        final currentUserId =
+            supabase.auth.currentUser?.id;
+
+        final usersById =
+            <String, Map<String, dynamic>>{};
+
+        for (final state
+            in presenceChannel.presenceState()) {
+          for (final presence in state.presences) {
+            final user =
+                Map<String, dynamic>.from(
+              presence.payload,
+            );
+
+            final userId =
+                user['user_id']?.toString();
+
+            if (userId == null ||
+                userId == currentUserId) {
+              continue;
+            }
+
+            usersById[userId] = user;
+          }
+        }
+
+        setState(() {
+          roomUsers
+            ..clear()
+            ..addAll(usersById.values);
+        });
       })
-      .subscribe((status, error) {
+      .subscribe((status, error) async {
         if (status == 'SUBSCRIBED') {
-          presenceChannel.track({
-            'user_id': supabase.auth.currentUser!.id,
+          await presenceChannel.track({
+            'user_id':
+                supabase.auth.currentUser!.id,
             'nick': widget.nick,
             'room_id': widget.roomId,
           });
