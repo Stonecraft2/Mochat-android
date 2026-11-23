@@ -837,6 +837,25 @@ Future<void> loadMessages() async {
   const SnackBar(content: Text('Presence Sync сработал')),
 );
 
+        final allPresences = presenceChannel
+    .presenceState()
+    .expand((state) => state.presences)
+    .toList();
+
+final firstPayload = allPresences.isNotEmpty
+    ? Map<String, dynamic>.from(
+        allPresences.first.payload,
+      )
+    : <String, dynamic>{};
+
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text(
+      'Всего Presence: ${allPresences.length}; '
+      'поля: ${firstPayload.keys.join(", ")}',
+    ),
+  ),
+);
         final currentUserId =
             supabase.auth.currentUser?.id;
 
