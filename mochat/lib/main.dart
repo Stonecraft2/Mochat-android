@@ -873,8 +873,10 @@ Future<void> loadMessages() async {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Presence: $result')),
-    );
+  SnackBar(
+    content: Text('Room ID: ${widget.roomId}'),
+  ),
+);
   } else {
     if (!mounted) return;
 
