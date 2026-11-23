@@ -833,6 +833,11 @@ Future<void> loadMessages() async {
   presenceChannel
       .onPresenceSync((payload) {
         if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(
+    content: Text('Начинаю проверку Presence'),
+  ),
+);
 
         final allPresences = presenceChannel
     .presenceState()
