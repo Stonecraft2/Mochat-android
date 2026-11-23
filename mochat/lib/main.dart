@@ -716,7 +716,8 @@ final controller = TextEditingController();
 final scrollController = ScrollController();
 
   final messages = <ChatMessage>[];
-  final List<Map<String, dynamic>> roomUsers = [];
+  final ValueNotifier<List<Map<String, dynamic>>> roomUsersNotifier =
+    ValueNotifier([]);
   bool isLoading = true;
   bool showWelcome = true;
 
@@ -859,11 +860,7 @@ Future<void> loadMessages() async {
           }
         }
 
-        setState(() {
-          roomUsers
-            ..clear()
-            ..addAll(usersById.values);
-        });
+        roomUsersNotifier.value = usersById.values.toList();
       })
       .subscribe((status, error) async {
         if (status == 'SUBSCRIBED') {
@@ -887,6 +884,8 @@ void dispose() {
     presenceChannel.untrack();
     supabase.removeChannel(presenceChannel);
   }
+
+  roomUsersNotifier.dispose();
 
   controller.dispose();
   scrollController.dispose();
@@ -1038,7 +1037,9 @@ void dispose() {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const PeoplePage(),
+                          builder: (_) => PeoplePage(
+  peopleNotifier: roomUsersNotifier,
+),
                         ),
                       ),
                       icon: const Icon(Icons.people, color: Colors.white),
@@ -1159,11 +1160,15 @@ void showChatMenu(BuildContext context, String nick) {
 }
 
 class PeoplePage extends StatelessWidget {
-  const PeoplePage({super.key});
+  final ValueNotifier<List<Map<String, dynamic>>> peopleNotifier;
+
+  const PeoplePage({
+    super.key,
+    required this.peopleNotifier,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const people = ['Алина', 'Рамзан', 'Марат', 'Гость'];
     return Scaffold(
       body: SnowBackground(
         child: SafeArea(
@@ -1174,22 +1179,42 @@ class PeoplePage extends StatelessWidget {
                 onBack: () => Navigator.pop(context),
               ),
               Expanded(
-                child: ListView(
-                  children: people
-                      .map((name) => ListTile(
-                            title: Text(name,
-                                style: const TextStyle(
-                                    color: moBlueDark, fontSize: 17)),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const ProfilePage()),
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ),
+  child: ValueListenableBuilder<List<Map<String, dynamic>>>(
+    valueListenable: peopleNotifier,
+    builder: (context, people, child) {
+      if (people.isEmpty) {
+        return const Center(
+          child: Text(
+            'Пока никого нет',
+            style: TextStyle(
+              color: moBlueDark,
+              fontSize: 16,
+            ),
+          ),
+        );
+      }
+
+      return ListView(
+        children: people.map((person) => ListTile(
+          title: Text(
+            person['nick']?.toString() ?? 'Без имени',
+            style: const TextStyle(
+              color: moBlueDark,
+              fontSize: 17,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ProfilePage(),
+            ),
+          ),
+        )).toList(),
+      );
+    },
+  ),
+),
             ],
           ),
         ),
