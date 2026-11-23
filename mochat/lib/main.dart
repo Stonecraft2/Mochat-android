@@ -825,7 +825,7 @@ Future<void> loadMessages() async {
         loadMessages();
       });
       }
-  void joinRoomPresence() {
+   joinRoomPresence() {
   presenceChannel = supabase.channel(
     'room_presence_${widget.roomId}',
   );
@@ -863,7 +863,7 @@ Future<void> loadMessages() async {
         roomUsersNotifier.value = usersById.values.toList();
       })
       .subscribe((status, error) async {
-        if (status == 'SUBSCRIBED') {
+        if (status == RealtimeSubscribeStatus.subscribed) {
           await presenceChannel.track({
             'user_id':
                 supabase.auth.currentUser!.id,
