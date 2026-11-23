@@ -1034,18 +1034,21 @@ void dispose() {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PeoplePage(
-  peopleNotifier: roomUsersNotifier,
+  onPressed: () {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => PeoplePage(
+        peopleNotifier: roomUsersNotifier,
+      ),
+    );
+  },
+  icon: const Icon(Icons.people, color: Colors.white),
+  label: const Text(
+    'Люди',
+    style: TextStyle(color: Colors.white),
+  ),
 ),
-                        ),
-                      ),
-                      icon: const Icon(Icons.people, color: Colors.white),
-                      label: const Text('Люди',
-                          style: TextStyle(color: Colors.white)),
-                    ),
                     TextButton.icon(
                       onPressed: () => showChatMenu(context, widget.nick),
                       icon: const Icon(Icons.menu, color: Colors.white),
@@ -1159,6 +1162,7 @@ void showChatMenu(BuildContext context, String nick) {
   );
 }
 
+
 class PeoplePage extends StatelessWidget {
   final ValueNotifier<List<Map<String, dynamic>>> peopleNotifier;
 
@@ -1169,59 +1173,133 @@ class PeoplePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SnowBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              BlueHeader(
-                title: 'Люди в комнате',
-                onBack: () => Navigator.pop(context),
-              ),
-              Expanded(
-  child: ValueListenableBuilder<List<Map<String, dynamic>>>(
-    valueListenable: peopleNotifier,
-    builder: (context, people, child) {
-      if (people.isEmpty) {
-        return const Center(
-          child: Text(
-            'Пока никого нет',
-            style: TextStyle(
-              color: moBlueDark,
-              fontSize: 16,
-            ),
-          ),
-        );
-      }
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
-      return ListView(
-        children: people.map((person) => ListTile(
-          title: Text(
-            person['nick']?.toString() ?? 'Без имени',
-            style: const TextStyle(
-              color: moBlueDark,
-              fontSize: 17,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.125,
+        vertical: screenHeight * 0.08,
+      ),
+      child: Container(
+        width: screenWidth * 0.75,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4FAFE),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: moBlue.withValues(alpha: 0.65),
+            width: 1.3,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: moBlueDark.withValues(alpha: 0.18),
+              blurRadius: 22,
+              offset: const Offset(0, 8),
             ),
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const ProfilePage(),
-            ),
-          ),
-        )).toList(),
-      );
-    },
-  ),
-),
-            ],
-          ),
+          ],
+        ),
+        child: ValueListenableBuilder<List<Map<String, dynamic>>>(
+          valueListenable: peopleNotifier,
+          builder: (context, people, child) {
+            return AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Люди в комнате',
+                            style: TextStyle(
+                              color: moBlueDark,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(
+                            Icons.close,
+                            color: moBlueDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    height: 1,
+                    color: moBlue.withValues(alpha: 0.35),
+                  ),
+                  if (people.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(28),
+                      child: Text(
+                        'Пока никого нет',
+                        style: TextStyle(
+                          color: moBlueDark,
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: screenHeight * 0.68,
+                      ),
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        children: people.map((person) {
+                          return ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: moBlue,
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.white,
+                              ),
+                            ),
+                            title: Text(
+                              person['nick']?.toString() ?? 'Без имени',
+                              style: const TextStyle(
+                                color: moBlueDark,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.chevron_right,
+                              color: moBlueDark,
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ProfilePage(),
+                                ),
+                              );
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 }
+
 
 class PortalPage extends StatelessWidget {
   const PortalPage({super.key});
