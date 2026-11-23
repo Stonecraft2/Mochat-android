@@ -833,6 +833,9 @@ Future<void> loadMessages() async {
   presenceChannel
       .onPresenceSync((payload) {
         if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(content: Text('Presence Sync сработал')),
+);
 
         final currentUserId =
             supabase.auth.currentUser?.id;
