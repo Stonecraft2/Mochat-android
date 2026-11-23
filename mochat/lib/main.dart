@@ -864,6 +864,11 @@ Future<void> loadMessages() async {
         }
 
         roomUsersNotifier.value = usersById.values.toList();
+        ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text('Найдено пользователей: ${usersById.length}'),
+  ),
+);
       })
       .subscribe((status, error) async {
   if (status == RealtimeSubscribeStatus.subscribed) {
