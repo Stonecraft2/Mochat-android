@@ -900,7 +900,11 @@ ScaffoldMessenger.of(context).showSnackBar(
     });
 
     if (!mounted) return;
-
+    ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text('Результат track: $result'),
+  ),
+);
   } else {
     if (!mounted) return;
 
