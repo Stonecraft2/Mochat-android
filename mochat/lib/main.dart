@@ -836,10 +836,11 @@ Future<void> loadMessages() async {
   if (!mounted) return;
 
   try {
-    final allPresences = presenceChannel
-        .presenceState()
-        .expand((state) => state.presences)
-        .toList();
+    final allPresences = <dynamic>[];
+
+for (final state in presenceChannel.presenceState()) {
+  allPresences.addAll(state.presences);
+}
 
     final firstPayload = allPresences.isNotEmpty
         ? Map<String, dynamic>.from(
