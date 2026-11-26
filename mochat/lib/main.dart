@@ -831,66 +831,77 @@ Future<void> loadMessages() async {
   );
 
   presenceChannel
-      .onPresenceSync((payload) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(
-    content: Text('Начинаю проверку Presence'),
-  ),
-);
+      
+.onPresenceSync((payload) {
+  if (!mounted) return;
 
-        final allPresences = presenceChannel
-    .presenceState()
-    .expand((state) => state.presences)
-    .toList();
+  try {
+    final allPresences = presenceChannel
+        .presenceState()
+        .expand((state) => state.presences)
+        .toList();
 
-final firstPayload = allPresences.isNotEmpty
-    ? Map<String, dynamic>.from(
-        allPresences.first.payload,
-      )
-    : <String, dynamic>{};
+    final firstPayload = allPresences.isNotEmpty
+        ? Map<String, dynamic>.from(
+            allPresences.first.payload,
+          )
+        : <String, dynamic>{};
 
-ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(
-    content: Text(
-      'Всего Presence: ${allPresences.length}; '
-      'поля: ${firstPayload.keys.join(", ")}',
-    ),
-  ),
-);
-        final currentUserId =
-            supabase.auth.currentUser?.id;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Всего Presence: ${allPresences.length}; '
+          'поля: ${firstPayload.keys.join(", ")}',
+        ),
+      ),
+    );
 
-        final usersById =
-            <String, Map<String, dynamic>>{};
+    final currentUserId =
+        supabase.auth.currentUser?.id;
 
-        for (final state
-            in presenceChannel.presenceState()) {
-          for (final presence in state.presences) {
-            final user =
-                Map<String, dynamic>.from(
-              presence.payload,
-            );
+    final usersById =
+        <String, Map<String, dynamic>>{};
 
-            final userId =
-                user['user_id']?.toString();
+    for (final state in presenceChannel.presenceState()) {
+      for (final presence in state.presences) {
+        final user = Map<String, dynamic>.from(
+          presence.payload,
+        );
 
-            if (userId == null ||
-                userId == currentUserId) {
-              continue;
-            }
+        final userId = user['user_id']?.toString();
 
-            usersById[userId] = user;
-          }
+        if (userId == null || userId == currentUserId) {
+          continue;
         }
 
-        roomUsersNotifier.value = usersById.values.toList();
-        ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(
-    content: Text('Найдено пользователей: ${usersById.length}'),
-  ),
-);
-      })
+        usersById[userId] = user;
+      }
+    }
+
+    roomUsersNotifier.value = usersById.values.toList();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Найдено пользователей: ${usersById.length}',
+        ),
+      ),
+    );
+  } catch (e, stackTrace) {
+    debugPrint('PRESENCE ERROR: $e');
+    debugPrint('$stackTrace');
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Ошибка проверки Presence: $e'),
+        duration: const Duration(seconds: 6),
+      ),
+    );
+  }
+})
+    
       .subscribe((status, error) async {
   if (status == RealtimeSubscribeStatus.subscribed) {
     final result = await presenceChannel.track({
