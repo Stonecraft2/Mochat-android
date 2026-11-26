@@ -826,6 +826,11 @@ Future<void> loadMessages() async {
       });
       }
    joinRoomPresence() {
+     ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(
+    content: Text('Метод joinRoomPresence запущен'),
+  ),
+);
   presenceChannel = supabase.channel(
     'room_presence_${widget.roomId}',
   );
